@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
 import { AuthService } from '../../services/auth.service';
 import { ChatMessage } from '../../models/chat.model';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -252,6 +252,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   isSystemMessage(message: ChatMessage): boolean {
     return message.message.includes('se ha unido al chat') || 
+           message.message.includes('se ha salido del chat') ||
            message.message.includes('se ha creado el chatgeneral');
   }
 
@@ -259,31 +260,31 @@ export class ChatComponent implements OnInit, OnDestroy {
     return message.id;
   }
 
-          formatTime(timestamp: string): string {
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diff = now.getTime() - date.getTime();
-            const seconds = Math.floor(diff / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const hours = Math.floor(minutes / 60);
+  formatTime(timestamp: string): string {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
 
-            if (seconds < 60) {
-              return 'Ahora';
-            } else if (minutes < 60) {
-              return `${minutes}m`;
-            } else if (hours < 24) {
-              return `${hours}h`;
-            } else {
-              return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            }
-          }
+    if (seconds < 60) {
+      return 'Ahora';
+    } else if (minutes < 60) {
+      return `${minutes}m`;
+    } else if (hours < 24) {
+      return `${hours}h`;
+    } else {
+      return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+  }
 
-          getInitials(name: string): string {
-            if (!name) return '?';
-            const parts = name.trim().split(' ');
-            if (parts.length >= 2) {
-              return (parts[0][0] + parts[1][0]).toUpperCase();
-            }
-            return name.substring(0, 2).toUpperCase();
-          }
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
 }

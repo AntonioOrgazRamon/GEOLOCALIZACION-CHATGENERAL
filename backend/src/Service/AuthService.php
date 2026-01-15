@@ -110,6 +110,15 @@ class AuthService
 
     public function logoutAndDeleteUser(User $user): void
     {
+        // Enviar mensaje de "se ha salido del chat" ANTES de desactivar al usuario
+        // para que el mensaje se guarde correctamente
+        try {
+            $this->chatService->sendLeaveMessage($user);
+        } catch (\Exception $e) {
+            // Si falla el mensaje, continuar con el logout de todas formas
+            // No queremos que un error en el chat impida el logout
+        }
+
         // Eliminar todos los refresh tokens del usuario
         $refreshTokens = $this->refreshTokenRepository->findBy(['user' => $user]);
         foreach ($refreshTokens as $token) {

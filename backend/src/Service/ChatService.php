@@ -110,6 +110,15 @@ class ChatService
     }
 
     /**
+     * Enviar mensaje del sistema cuando un usuario se sale del chat
+     */
+    public function sendLeaveMessage(User $user): ChatMessage
+    {
+        $message = $user->getName() . ' se ha salido del chat';
+        return $this->sendMessage($user, $message);
+    }
+
+    /**
      * Limpiar mensajes cuando todos los usuarios están inactivos
      * Se llama cuando un usuario se desactiva
      */
