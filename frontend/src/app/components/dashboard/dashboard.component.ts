@@ -223,6 +223,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
+    // El logout manual siempre debe enviar el mensaje de "se ha salido"
     this.authService.logout().subscribe({
       next: () => {
         this.router.navigate(['/login']);

@@ -204,10 +204,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   setupBeforeUnload(): void {
-    // Detectar cuando el usuario cierra la ventana/pestaña
-    window.addEventListener('beforeunload', () => {
-      // Usar sendBeacon para asegurar que se envíe la petición
-      this.handleLogoutSync();
+    // Usar pagehide para detectar cierre real de pestaña/ventana
+    // pagehide es más confiable que beforeunload para distinguir entre recarga y cierre
+    window.addEventListener('pagehide', (event) => {
+      // event.persisted es true cuando la página se está guardando en cache (back/forward)
+      // Si persisted es false, significa que la página se está descargando (cierre real)
+      if (!event.persisted) {
+        // Es un cierre real, no una recarga o navegación
+        this.handleLogoutSync();
+      }
     });
   }
 
