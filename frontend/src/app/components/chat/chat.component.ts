@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
 import { AuthService } from '../../services/auth.service';
 import { ChatMessage } from '../../models/chat.model';
+import { environment } from '../../environments/environment';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -229,7 +230,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     const token = this.authService.getToken();
     if (token) {
       // Intentar hacer logout con fetch keepalive
-      fetch('http://localhost:8000/api/logout', {
+      fetch(`${environment.apiUrl}/logout`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

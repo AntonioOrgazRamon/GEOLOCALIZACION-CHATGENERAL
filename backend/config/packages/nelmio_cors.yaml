@@ -1,7 +1,12 @@
 nelmio_cors:
     defaults:
         origin_regex: true
-        allow_origin: ['^http://localhost:[0-9]+$', '^http://127\.0\.0\.1:[0-9]+$']
+        # For production, set CORS_ALLOW_ORIGIN in .env
+        # Example: CORS_ALLOW_ORIGIN="^https://chat\.tudominio\.com$"
+        allow_origin: 
+            - '%env(string:CORS_ALLOW_ORIGIN)%'
+            - '^http://localhost:[0-9]+$'
+            - '^http://127\.0\.0\.1:[0-9]+$'
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
         allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
         expose_headers: ['Link']
@@ -9,7 +14,10 @@ nelmio_cors:
         allow_credentials: true
     paths:
         '^/api/':
-            allow_origin: ['^http://localhost:[0-9]+$', '^http://127\.0\.0\.1:[0-9]+$']
+            allow_origin: 
+                - '%env(string:CORS_ALLOW_ORIGIN)%'
+                - '^http://localhost:[0-9]+$'
+                - '^http://127\.0\.0\.1:[0-9]+$'
             allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
             allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
             max_age: 3600

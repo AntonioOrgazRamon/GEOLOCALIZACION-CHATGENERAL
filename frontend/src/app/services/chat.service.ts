@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ChatMessage, ChatMessageRequest, ChatMessagesResponse } from '../models/chat.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-  private apiUrl = 'http://localhost:8000/api/chat';
+  private apiUrl = `${environment.apiUrl}/chat`;
   private loginTimestamp: number = Date.now(); // Timestamp de cuando el usuario entró
 
   constructor(private http: HttpClient) {
