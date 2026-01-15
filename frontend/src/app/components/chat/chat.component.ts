@@ -204,13 +204,28 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   setupBeforeUnload(): void {
-    // Usar pagehide para detectar cierre real de pestaña/ventana
-    // pagehide es más confiable que beforeunload para distinguir entre recarga y cierre
+    // Detectar cuando el usuario cierra realmente la pestaña/ventana
+    // Usar una combinación de eventos para distinguir entre recarga y cierre real
+    
+    let isReloading = false;
+    
+    // Detectar si es una recarga (F5, Ctrl+R, etc.)
+    window.addEventListener('beforeunload', () => {
+      // Verificar si es una recarga usando performance.navigation
+      const perf = (window.performance as any);
+      if (perf && perf.navigation) {
+        // navigation.type: 0 = TYPE_NAVIGATE, 1 = TYPE_RELOAD, 2 = TYPE_BACK_FORWARD
+        if (perf.navigation.type === 1) {
+          isReloading = true;
+        }
+      }
+    });
+    
+    // Usar pagehide para detectar cierre real
     window.addEventListener('pagehide', (event) => {
-      // event.persisted es true cuando la página se está guardando en cache (back/forward)
-      // Si persisted es false, significa que la página se está descargando (cierre real)
-      if (!event.persisted) {
-        // Es un cierre real, no una recarga o navegación
+      // Solo hacer logout si NO es una recarga y NO está en cache
+      if (!isReloading && !event.persisted) {
+        // Es un cierre real de pestaña/ventana
         this.handleLogoutSync();
       }
     });
