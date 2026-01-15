@@ -19,12 +19,16 @@ security:
             pattern: ^/api
             stateless: true
             jwt: ~
+            # Allow OPTIONS requests without authentication (for CORS preflight)
+            entry_point: null
         main:
             lazy: true
             provider: app_user_provider
 
     # Note: Only the *first* matching rule is applied
     access_control:
+        # Allow OPTIONS requests (CORS preflight) without authentication
+        - { path: ^/api, methods: [OPTIONS], roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/refresh, roles: PUBLIC_ACCESS }

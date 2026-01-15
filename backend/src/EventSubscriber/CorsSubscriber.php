@@ -13,8 +13,9 @@ class CorsSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::REQUEST => ['onKernelRequest', 9999],
-            KernelEvents::RESPONSE => ['onKernelResponse', 9999],
+            // Use higher priority to run before security and other listeners
+            KernelEvents::REQUEST => ['onKernelRequest', 256],
+            KernelEvents::RESPONSE => ['onKernelResponse', 256],
         ];
     }
 
