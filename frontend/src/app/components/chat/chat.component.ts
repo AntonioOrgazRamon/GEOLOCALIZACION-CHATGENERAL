@@ -177,17 +177,41 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
 
     const messageText = this.newMessage.trim();
+    const user = this.authService.getUser();
+    
+    // Crear mensaje optimista (aparece inmediatamente)
+    const optimisticMessage: ChatMessage = {
+      id: Date.now(), // ID temporal negativo para identificar mensajes optimistas
+      user_name: user?.name || 'Tú',
+      message: messageText,
+      created_at: new Date().toISOString()
+    };
+    
+    // Agregar inmediatamente al chat
+    this.messages.push(optimisticMessage);
     this.newMessage = '';
-    // No usar loading para deshabilitar el input, solo para indicadores visuales si es necesario
+    this.scrollToBottom();
 
+    // Enviar al servidor
     this.chatService.sendMessage(messageText).subscribe({
       next: (message) => {
-        // Agregar el mensaje a la lista
-        this.messages.push(message);
+        // Reemplazar el mensaje optimista con el real del servidor
+        const optimisticIndex = this.messages.findIndex(m => m.id === optimisticMessage.id);
+        if (optimisticIndex !== -1) {
+          this.messages[optimisticIndex] = message;
+        } else {
+          // Si no se encuentra el optimista, agregar el real
+          this.messages.push(message);
+        }
         this.scrollToBottom();
       },
       error: (err) => {
         console.error('Error sending message:', err);
+        // Remover el mensaje optimista
+        const optimisticIndex = this.messages.findIndex(m => m.id === optimisticMessage.id);
+        if (optimisticIndex !== -1) {
+          this.messages.splice(optimisticIndex, 1);
+        }
         this.error = 'Error al enviar mensaje';
         this.newMessage = messageText; // Restaurar el mensaje
       }
