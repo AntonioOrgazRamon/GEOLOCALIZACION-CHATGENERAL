@@ -41,6 +41,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   joinChat(): void {
+    // Asegurar que loading esté en false para que el input esté habilitado
+    this.loading = false;
+    
     this.chatService.joinChat().subscribe({
       next: (response: any) => {
         // Si es el primer usuario, puede venir un array de mensajes
@@ -51,12 +54,16 @@ export class ChatComponent implements OnInit, OnDestroy {
         // Después de unirse, cargar mensajes y empezar polling
         this.loadMessages();
         this.startPolling();
+        // Asegurar que el input esté habilitado después de unirse
+        this.loading = false;
       },
       error: (err) => {
         console.error('Error joining chat:', err);
         // Aun así, intentar cargar mensajes
         this.loadMessages();
         this.startPolling();
+        // Asegurar que el input esté habilitado incluso si hay error
+        this.loading = false;
       }
     });
   }
@@ -78,9 +85,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     const cursorPosition = this.messageInput?.nativeElement.selectionStart || inputValue.length;
 
     // NO actualizar loading si el usuario está escribiendo para evitar interrupciones visuales
-    if (!wasInputFocused) {
-      this.loading = true;
-    }
+    // Y NO deshabilitar el input durante la carga de mensajes
+    // this.loading solo se usa para mostrar estado visual, no para deshabilitar el input
     this.error = '';
 
     this.chatService.getMessages().subscribe({
@@ -122,16 +128,12 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
         }
         
-        if (!wasInputFocused) {
-          this.loading = false;
-        }
+        // No cambiar loading aquí, el input siempre debe estar habilitado
       },
       error: (err) => {
         console.error('Error loading messages:', err);
         this.error = 'Error al cargar mensajes';
-        if (!wasInputFocused) {
-          this.loading = false;
-        }
+        // No cambiar loading aquí, el input siempre debe estar habilitado
         
         // Restaurar el estado del input incluso si hay error
         if (wasInputFocused && this.messageInput) {
@@ -176,19 +178,17 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     const messageText = this.newMessage.trim();
     this.newMessage = '';
-    this.loading = true;
+    // No usar loading para deshabilitar el input, solo para indicadores visuales si es necesario
 
     this.chatService.sendMessage(messageText).subscribe({
       next: (message) => {
         // Agregar el mensaje a la lista
         this.messages.push(message);
-        this.loading = false;
         this.scrollToBottom();
       },
       error: (err) => {
         console.error('Error sending message:', err);
         this.error = 'Error al enviar mensaje';
-        this.loading = false;
         this.newMessage = messageText; // Restaurar el mensaje
       }
     });

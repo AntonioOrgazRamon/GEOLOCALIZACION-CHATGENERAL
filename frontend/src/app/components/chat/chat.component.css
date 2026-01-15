@@ -240,6 +240,8 @@
   font-size: 13px;
   outline: none;
   resize: none;
+  pointer-events: auto;
+  cursor: text;
 }
 
 .message-input::placeholder {

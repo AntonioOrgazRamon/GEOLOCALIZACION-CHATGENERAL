@@ -54,12 +54,11 @@
         (input)="onInput($event)"
         (keyup.enter)="sendMessage()"
         placeholder="Escribe un mensaje..."
-        [disabled]="loading"
         class="message-input"
       />
       <button
         (click)="sendMessage()"
-        [disabled]="loading || !newMessage.trim()"
+        [disabled]="!newMessage.trim()"
         class="send-button"
         title="Enviar"
       >
