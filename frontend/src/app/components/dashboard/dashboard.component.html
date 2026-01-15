@@ -3,50 +3,58 @@
     <h1>Geolocation App</h1>
     <div class="user-info">
       <span>Welcome, {{ user?.name }}</span>
-      <button class="btn btn-secondary" (click)="logout()">Logout</button>
+      <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>
 
   <div class="dashboard-content">
     <div class="location-section">
-      <h2>My Location</h2>
-      <div *ngIf="locationSet" class="location-info">
+      <h2>Mi Ubicación</h2>
+      <div *ngIf="loadingLocation" class="loading-status">
+        <p>📍 Obteniendo tu ubicación...</p>
+      </div>
+      <div *ngIf="locationSet && !loadingLocation" class="location-info">
         <p><strong>Latitude:</strong> {{ latitude }}</p>
         <p><strong>Longitude:</strong> {{ longitude }}</p>
       </div>
-      <div *ngIf="!locationSet" class="no-location">
-        <p>Your location is not set. Click the button below to get your current location.</p>
+      <div *ngIf="!locationSet && !loadingLocation" class="no-location">
+        <p>Esperando ubicación...</p>
       </div>
-      <button class="btn btn-primary" (click)="getMyLocation()" [disabled]="loading">
-        {{ loading ? 'Getting location...' : 'Obtener mi ubicación' }}
-      </button>
     </div>
 
     <div class="search-section">
-      <h2>Search Nearby Users</h2>
-      <p>Find users within 5 km of your location</p>
-      <button class="btn btn-primary" (click)="searchNearbyUsers()" [disabled]="loading || !locationSet">
-        {{ loading ? 'Searching...' : 'Buscar personas a 5 km' }}
-      </button>
+      <h2>Usuarios Cercanos (5 km)</h2>
+      <div *ngIf="locationSet" class="search-info">
+        <p>Búsqueda automática activa</p>
+        <div class="countdown-container">
+          <span class="countdown-label">Próxima actualización en:</span>
+          <span class="countdown-value">{{ countdown }}s</span>
+        </div>
+      </div>
     </div>
 
     <div *ngIf="error" class="error-message">
       {{ error }}
     </div>
 
-    <div *ngIf="nearbyUsers.length > 0" class="users-list">
-      <h2>Nearby Users ({{ nearbyUsers.length }})</h2>
-      <div class="users-grid">
+    <!-- Contenedor siempre presente para evitar layout shift -->
+    <div class="users-list" [class.has-users]="nearbyUsers.length > 0">
+      <h2 *ngIf="nearbyUsers.length > 0">Usuarios Cercanos ({{ nearbyUsers.length }})</h2>
+      <div *ngIf="nearbyUsers.length > 0" class="users-grid">
         <div *ngFor="let user of nearbyUsers" class="user-card">
           <h3>{{ user.name }}</h3>
           <p class="email">{{ user.email }}</p>
-          <p class="distance">Distance: {{ user.distance_km }} km</p>
+          <p class="distance">Distancia: {{ user.distance_km }} km</p>
         </div>
       </div>
+      <div *ngIf="nearbyUsers.length === 0 && locationSet" class="no-users">
+        <p>No se encontraron usuarios cercanos en un radio de 5 km.</p>
+      </div>
     </div>
+  </div>
 
-    <div *ngIf="nearbyUsers.length === 0 && !loading" class="no-users">
-      <p>No users found nearby. Try searching again or update your location.</p>
-    </div>
+  <!-- Chat section fuera del grid para que siempre se muestre -->
+  <div class="chat-section">
+    <app-chat></app-chat>
   </div>
 </div>

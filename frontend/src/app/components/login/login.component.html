@@ -46,6 +46,7 @@
 
 <app-location-permission 
   *ngIf="showLocationModal"
+  [autoRequest]="true"
   (permissionGranted)="onLocationGranted($event)"
   (permissionDenied)="onLocationDenied()">
 </app-location-permission>

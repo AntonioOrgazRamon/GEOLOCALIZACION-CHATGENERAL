@@ -28,6 +28,8 @@ class GeolocationService
         $user->setLatitude((string) $latitude);
         $user->setLongitude((string) $longitude);
         $user->setUpdatedAt(new \DateTime());
+        // Asegurar que el usuario esté activo cuando actualiza su ubicación
+        $user->setIsActive(true);
 
         $this->entityManager->flush();
     }

@@ -55,9 +55,21 @@ export class RegisterComponent {
       password: this.password
     }).subscribe({
       next: () => {
-        this.success = 'Registration successful! Please allow location access.';
-        this.loading = false;
-        this.showLocationModal = true;
+        // Después del registro, hacer login automáticamente
+        this.authService.login({ email: this.email, password: this.password }).subscribe({
+          next: () => {
+            this.success = 'Registro exitoso! Obteniendo tu ubicación...';
+            this.loading = false;
+            this.showLocationModal = true; // Esto activará automáticamente la solicitud de ubicación
+          },
+          error: (err) => {
+            this.error = 'Registro exitoso, pero falló el login automático. Por favor, inicia sesión manualmente.';
+            this.loading = false;
+            setTimeout(() => {
+              this.router.navigate(['/login']);
+            }, 2000);
+          }
+        });
       },
       error: (err) => {
         this.error = err.error?.error || 'Registration failed. Please try again.';
@@ -67,14 +79,24 @@ export class RegisterComponent {
   }
 
   onLocationGranted(coords: {latitude: number, longitude: number}): void {
-    // After registration, user needs to login first, so just redirect to login
-    this.showLocationModal = false;
-    this.router.navigate(['/login']);
+    // Actualizar ubicación después de obtenerla
+    this.apiService.updateLocation(coords).subscribe({
+      next: () => {
+        this.showLocationModal = false;
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        console.error('Location update error:', err);
+        // Continuar al dashboard incluso si falla la actualización
+        this.showLocationModal = false;
+        this.router.navigate(['/dashboard']);
+      }
+    });
   }
 
   onLocationDenied(): void {
-    // User denied or skipped, continue to login
+    // Usuario denegó o omitió, continuar al dashboard
     this.showLocationModal = false;
-    this.router.navigate(['/login']);
+    this.router.navigate(['/dashboard']);
   }
 }

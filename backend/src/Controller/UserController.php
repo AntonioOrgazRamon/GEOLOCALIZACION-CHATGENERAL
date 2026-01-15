@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\DTO\LocationDTO;
 use App\Service\GeolocationService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +21,8 @@ class UserController extends AbstractController
     public function __construct(
         private GeolocationService $geolocationService,
         private SerializerInterface $serializer,
-        private ValidatorInterface $validator
+        private ValidatorInterface $validator,
+        private EntityManagerInterface $entityManager
     ) {
     }
 
@@ -63,6 +65,21 @@ class UserController extends AbstractController
             /** @var \App\Entity\User $user */
             $user = $this->getUser();
 
+            // Refrescar la entidad desde la base de datos para obtener los datos más recientes
+            $this->entityManager->refresh($user);
+
+            // Verificar que el usuario tenga ubicación
+            if (!$user->getLatitude() || !$user->getLongitude()) {
+                return $this->json([
+                    'error' => 'User location is not set',
+                    'debug' => [
+                        'user_id' => $user->getId(),
+                        'has_latitude' => $user->getLatitude() !== null,
+                        'has_longitude' => $user->getLongitude() !== null,
+                    ]
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
             $nearbyUsers = $this->geolocationService->findNearbyUsers($user);
 
             return $this->json([
@@ -72,7 +89,10 @@ class UserController extends AbstractController
         } catch (\RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'An error occurred'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->json([
+                'error' => 'An error occurred',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

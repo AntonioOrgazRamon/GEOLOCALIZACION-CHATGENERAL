@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, catchError, of } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../models/user.model';
 
 @Injectable({
@@ -27,17 +27,15 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
-    const refreshToken = this.getRefreshToken();
-    if (refreshToken) {
-      return this.http.post(`${this.apiUrl}/logout`, { refresh_token: refreshToken }).pipe(
-        tap(() => this.clearStorage())
-      );
-    }
-    this.clearStorage();
-    return new Observable(observer => {
-      observer.next({});
-      observer.complete();
-    });
+    // Eliminar usuario de la BD usando DELETE
+    return this.http.delete(`${this.apiUrl}/logout`).pipe(
+      tap(() => this.clearStorage()),
+      // Si falla, limpiar storage de todas formas
+      catchError((err) => {
+        this.clearStorage();
+        return of({});
+      })
+    );
   }
 
   refreshToken(): Observable<AuthResponse> {

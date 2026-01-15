@@ -6,6 +6,7 @@ use App\Entity\RefreshToken;
 use App\Entity\User;
 use App\Repository\RefreshTokenRepository;
 use App\Repository\UserRepository;
+use App\Service\ChatService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -18,7 +19,8 @@ class AuthService
         private RefreshTokenRepository $refreshTokenRepository,
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher,
-        private JWTTokenManagerInterface $jwtManager
+        private JWTTokenManagerInterface $jwtManager,
+        private ChatService $chatService
     ) {
     }
 
@@ -35,6 +37,7 @@ class AuthService
         $user->setEmail($email);
         $hashedPassword = $this->passwordHasher->hashPassword($user, $plainPassword);
         $user->setPassword($hashedPassword);
+        $user->setIsActive(true); // Asegurar que el usuario esté activo al registrarse
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -50,8 +53,10 @@ class AuthService
             throw new AuthenticationException('User not found');
         }
 
+        // Si el usuario está inactivo, reactivarlo al hacer login
         if (!$user->isActive()) {
-            throw new AuthenticationException('User is not active');
+            $user->setIsActive(true);
+            $this->entityManager->flush();
         }
 
         if (!$this->passwordHasher->isPasswordValid($user, $plainPassword)) {
@@ -101,6 +106,26 @@ class AuthService
             $this->entityManager->remove($refreshToken);
             $this->entityManager->flush();
         }
+    }
+
+    public function logoutAndDeleteUser(User $user): void
+    {
+        // Eliminar todos los refresh tokens del usuario
+        $refreshTokens = $this->refreshTokenRepository->findBy(['user' => $user]);
+        foreach ($refreshTokens as $token) {
+            $this->entityManager->remove($token);
+        }
+
+        // Desactivar el usuario en lugar de eliminarlo
+        $user->setIsActive(false);
+        // Limpiar ubicación para que no aparezca en búsquedas
+        $user->setLatitude(null);
+        $user->setLongitude(null);
+        
+        $this->entityManager->flush();
+        
+        // Verificar si hay usuarios activos y limpiar mensajes si no hay ninguno
+        $this->chatService->cleanMessagesIfNoActiveUsers();
     }
 
     private function generateRefreshToken(User $user): RefreshToken

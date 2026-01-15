@@ -38,10 +38,17 @@ export class LoginComponent {
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: () => {
-        // After login, show location permission modal
-        this.showLocationModal = true;
-        this.pendingLogin = true;
-        this.loading = false;
+        // Verificar si el usuario ya tiene ubicación guardada
+        const user = this.authService.getUser();
+        if (user && user.latitude && user.longitude) {
+          // Ya tiene ubicación, ir directo al dashboard
+          this.router.navigate(['/dashboard']);
+        } else {
+          // No tiene ubicación, obtenerla automáticamente
+          this.showLocationModal = true;
+          this.pendingLogin = true;
+          this.loading = false;
+        }
       },
       error: (err) => {
         console.error('Login error:', err);

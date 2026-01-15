@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -101,6 +102,26 @@ class AuthController extends AbstractController
             return $this->json(['message' => 'Logged out successfully']);
         } catch (\Exception $e) {
             return $this->json(['error' => 'An error occurred'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/logout', name: 'logout_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_USER')]
+    public function logoutAndDeactivate(): JsonResponse
+    {
+        try {
+            /** @var \App\Entity\User $user */
+            $user = $this->getUser();
+            
+            if (!$user) {
+                return $this->json(['error' => 'User not found'], Response::HTTP_UNAUTHORIZED);
+            }
+
+            $this->authService->logoutAndDeleteUser($user);
+
+            return $this->json(['message' => 'User deactivated successfully']);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'An error occurred: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -117,12 +117,11 @@ El frontend estará disponible en: `http://localhost:4200`
   }
   ```
 
-- `POST /api/logout` - Cerrar sesión
-  ```json
-  {
-    "refresh_token": "refresh_token_string"
-  }
-  ```
+- `DELETE /api/logout` - Cerrar sesión y desactivar usuario
+  - Requiere autenticación JWT
+  - Desactiva el usuario (`is_active = false`)
+  - Limpia la ubicación del usuario
+  - Si no hay usuarios activos, limpia todos los mensajes del chat
 
 - `POST /api/refresh` - Renovar access token
   ```json
@@ -141,7 +140,7 @@ El frontend estará disponible en: `http://localhost:4200`
   }
   ```
 
-- `GET /api/users/nearby` - Obtener usuarios en un radio de 5 km
+- `GET /api/users/nearby` - Obtener usuarios activos en un radio de 5 km
   Respuesta:
   ```json
   {
@@ -153,6 +152,35 @@ El frontend estará disponible en: `http://localhost:4200`
         "latitude": "40.416775",
         "longitude": "-3.703790",
         "distance_km": 2.5
+      }
+    ],
+    "count": 1
+  }
+  ```
+
+### Chat (Requiere Autenticación)
+
+- `POST /api/chat/messages` - Enviar mensaje al chat
+  ```json
+  {
+    "message": "Hola a todos!"
+  }
+  ```
+
+- `GET /api/chat/messages?since=1234567890` - Obtener mensajes
+  - `since`: Timestamp en milisegundos (opcional)
+  - Si se envía `since`: Solo mensajes desde ese momento (usuarios nuevos)
+  - Si no se envía: Todos los mensajes (usuarios que ya estaban activos)
+  
+  Respuesta:
+  ```json
+  {
+    "messages": [
+      {
+        "id": 1,
+        "user_name": "Antonio",
+        "message": "Hola!",
+        "created_at": "2026-01-15 10:30:00"
       }
     ],
     "count": 1
@@ -174,15 +202,47 @@ El frontend estará disponible en: `http://localhost:4200`
 
 ## Flujo de Geolocalización
 
-1. **Obtener Ubicación**: El usuario hace clic en "Obtener mi ubicación"
-   - El navegador solicita permisos de geolocalización
+1. **Obtener Ubicación Automática**: Al hacer login/registro
+   - Se solicita automáticamente la ubicación del usuario
    - Se obtienen las coordenadas (lat/lng)
    - Se envían al backend para actualizar la ubicación del usuario
+   - Todo sucede automáticamente, sin necesidad de botones
 
-2. **Buscar Usuarios Cercanos**: El usuario hace clic en "Buscar personas a 5 km"
-   - El backend calcula la distancia usando la fórmula de Haversine
-   - Devuelve usuarios activos dentro de un radio de 5 km
+2. **Búsqueda Automática de Usuarios Cercanos**: 
+   - Una vez obtenida la ubicación, se buscan usuarios automáticamente
+   - Se actualiza cada 10 segundos en tiempo real
+   - Muestra contador regresivo hasta la próxima actualización
+   - Solo muestra usuarios activos (`is_active = 1`) dentro de un radio de 5 km
    - Se excluye al usuario autenticado
+
+## Flujo del Chat General
+
+1. **Envío de Mensajes**:
+   - Los mensajes se guardan en la base de datos
+   - Se actualizan automáticamente cada 2 segundos (polling)
+   - Todos los usuarios activos ven los mensajes en tiempo real
+
+2. **Usuarios Nuevos**:
+   - Cuando un usuario hace login, se guarda el timestamp de entrada
+   - Solo ve mensajes enviados después de su entrada
+   - No ve mensajes antiguos del chat
+
+3. **Usuarios Activos**:
+   - Los usuarios que ya estaban activos ven todos los mensajes
+   - Ven el historial completo del chat
+
+4. **Logout/Cierre de Ventana**:
+   - Cuando un usuario hace logout o cierra la ventana:
+     - Se desactiva automáticamente (`is_active = false`)
+     - Se limpia su ubicación
+     - Sale del chat
+   - Si todos los usuarios se desactivan, se borran todos los mensajes del chat
+
+5. **Reactivación**:
+   - Si un usuario inactivo vuelve a hacer login:
+     - Se reactiva automáticamente (`is_active = true`)
+     - Solo ve mensajes nuevos (desde su nuevo login)
+     - Puede usar la aplicación normalmente
 
 ## Base de Datos
 
@@ -190,8 +250,36 @@ La base de datos ya existe y contiene:
 
 - **Tabla `users`**: Información de usuarios con coordenadas
 - **Tabla `refresh_tokens`**: Tokens de renovación JWT
+- **Tabla `chat_messages`**: Mensajes del chat general (crear con el script SQL)
 
 **IMPORTANTE**: No se deben generar migraciones que alteren la estructura existente.
+
+### Crear Tabla de Chat
+
+Ejecuta el script SQL para crear la tabla de mensajes:
+
+```sql
+-- Ejecutar en phpMyAdmin o MySQL
+USE geolocation_app;
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    user_name VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at),
+    
+    CONSTRAINT fk_chat_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+O ejecuta el archivo `backend/database_chat.sql` en tu cliente MySQL.
 
 ## Seguridad
 
@@ -207,17 +295,17 @@ La base de datos ya existe y contiene:
 
 ### Backend
 
-- **Entidades**: `src/Entity/User.php`, `src/Entity/RefreshToken.php`
-- **Repositorios**: `src/Repository/UserRepository.php`, `src/Repository/RefreshTokenRepository.php`
-- **Servicios**: `src/Service/AuthService.php`, `src/Service/GeolocationService.php`
-- **Controllers**: `src/Controller/AuthController.php`, `src/Controller/UserController.php`
+- **Entidades**: `src/Entity/User.php`, `src/Entity/RefreshToken.php`, `src/Entity/ChatMessage.php`
+- **Repositorios**: `src/Repository/UserRepository.php`, `src/Repository/RefreshTokenRepository.php`, `src/Repository/ChatMessageRepository.php`
+- **Servicios**: `src/Service/AuthService.php`, `src/Service/GeolocationService.php`, `src/Service/ChatService.php`
+- **Controllers**: `src/Controller/AuthController.php`, `src/Controller/UserController.php`, `src/Controller/ChatController.php`
 - **DTOs**: `src/DTO/`
 
 ### Frontend
 
-- **Modelos**: `src/app/models/user.model.ts`
-- **Servicios**: `src/app/services/auth.service.ts`, `src/app/services/api.service.ts`, `src/app/services/geolocation.service.ts`
-- **Componentes**: `src/app/components/login/`, `src/app/components/register/`, `src/app/components/dashboard/`
+- **Modelos**: `src/app/models/user.model.ts`, `src/app/models/chat.model.ts`
+- **Servicios**: `src/app/services/auth.service.ts`, `src/app/services/api.service.ts`, `src/app/services/geolocation.service.ts`, `src/app/services/chat.service.ts`
+- **Componentes**: `src/app/components/login/`, `src/app/components/register/`, `src/app/components/dashboard/`, `src/app/components/chat/`
 - **Guards**: `src/app/guards/auth.guard.ts`
 - **Interceptors**: `src/app/interceptors/auth.interceptor.ts`
 
@@ -250,4 +338,9 @@ Verifica que:
 - El usuario de ejemplo en la BD tiene un hash de password falso. Los nuevos usuarios se registran con passwords hasheados correctamente.
 - Los refresh tokens expiran después de 30 días.
 - La búsqueda de usuarios cercanos usa la fórmula de Haversine implementada directamente en MySQL.
+- Los usuarios no se eliminan de la BD, solo se desactivan al hacer logout (`is_active = false`).
+- El chat se limpia automáticamente cuando todos los usuarios están inactivos.
+- La ubicación y búsqueda de usuarios funcionan automáticamente, sin necesidad de botones.
+- El chat se actualiza automáticamente cada 2 segundos (polling).
+- Cuando un usuario cierra la ventana/pestaña, se desactiva automáticamente.
 

@@ -1,9 +1,13 @@
 <div class="modal-overlay" (click)="skip()">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    <h2>Permiso de Ubicación</h2>
-    <p>Para usar esta aplicación, necesitamos acceso a tu ubicación. Esto nos permite mostrarte usuarios cercanos.</p>
-    <p class="info-text">💡 <strong>Consejo:</strong> Asegúrate de que tu navegador tenga permisos de ubicación habilitados y que tu GPS o WiFi esté activado.</p>
+    <h2>Obteniendo tu Ubicación</h2>
+    <p>Estamos obteniendo tu ubicación automáticamente para mostrarte usuarios cercanos.</p>
+    <p class="info-text">💡 <strong>Consejo:</strong> Asegúrate de permitir el acceso a tu ubicación cuando tu navegador lo solicite.</p>
     
+    <div *ngIf="loading" class="loading-message">
+      <p>Esperando permiso de ubicación...</p>
+    </div>
+
     <div *ngIf="error" class="error-message">
       {{ error }}
       <div class="error-help" *ngIf="error.includes('denegado') || error.includes('denied')">
@@ -19,8 +23,9 @@
       <button 
         class="btn btn-primary" 
         (click)="requestLocation()" 
-        [disabled]="loading">
-        {{ loading ? 'Obteniendo ubicación...' : 'Permitir Ubicación' }}
+        [disabled]="loading"
+        *ngIf="error">
+        {{ loading ? 'Obteniendo ubicación...' : 'Intentar de nuevo' }}
       </button>
       <button 
         class="btn btn-secondary" 

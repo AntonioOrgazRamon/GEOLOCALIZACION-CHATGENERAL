@@ -1,0 +1,73 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h2>Chat General</h2>
+        <span class="chat-status">● Activo</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-messages" #chatContainer>
+    <div *ngIf="loading && messages.length === 0" class="loading-messages">
+      <p>Cargando mensajes...</p>
+    </div>
+    
+    <div *ngIf="messages.length === 0 && !loading" class="no-messages">
+      <p>No hay mensajes aún. ¡Sé el primero en escribir!</p>
+    </div>
+
+    <div *ngFor="let message of messages; trackBy: trackByMessageId" 
+         class="message-wrapper"
+         [class.own-wrapper]="isOwnMessage(message)"
+         [class.system-wrapper]="isSystemMessage(message)">
+      
+      <div *ngIf="!isSystemMessage(message)" class="message-bubble" [class.own-bubble]="isOwnMessage(message)">
+        <div *ngIf="!isOwnMessage(message)" class="message-avatar">
+          {{ getInitials(message.user_name) }}
+        </div>
+        <div class="message-content-wrapper">
+          <div *ngIf="!isOwnMessage(message)" class="message-sender">{{ message.user_name }}</div>
+          <div class="message-bubble-content">
+            <span class="message-text">{{ message.message }}</span>
+            <span class="message-time-bubble">{{ formatTime(message.created_at) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="isSystemMessage(message)" class="system-message">
+        <span class="system-content">{{ message.message }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div class="chat-input-container">
+    <div class="chat-input">
+      <input
+        #messageInput
+        type="text"
+        [value]="newMessage"
+        (input)="onInput($event)"
+        (keyup.enter)="sendMessage()"
+        placeholder="Escribe un mensaje..."
+        [disabled]="loading"
+        class="message-input"
+      />
+      <button
+        (click)="sendMessage()"
+        [disabled]="loading || !newMessage.trim()"
+        class="send-button"
+        title="Enviar"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

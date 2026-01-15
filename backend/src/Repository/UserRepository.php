@@ -54,16 +54,18 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
                 (
                     6371 * ACOS(
                         COS(RADIANS(:lat))
-                        * COS(RADIANS(latitude))
-                        * COS(RADIANS(longitude) - RADIANS(:lng))
+                        * COS(RADIANS(CAST(latitude AS DECIMAL(10,8))))
+                        * COS(RADIANS(CAST(longitude AS DECIMAL(11,8))) - RADIANS(:lng))
                         + SIN(RADIANS(:lat))
-                        * SIN(RADIANS(latitude))
+                        * SIN(RADIANS(CAST(latitude AS DECIMAL(10,8))))
                     )
                 ) AS distance_km
             FROM users
             WHERE
                 latitude IS NOT NULL
                 AND longitude IS NOT NULL
+                AND latitude != ''
+                AND longitude != ''
                 AND id != :user_id
                 AND is_active = 1
             HAVING distance_km <= :radius

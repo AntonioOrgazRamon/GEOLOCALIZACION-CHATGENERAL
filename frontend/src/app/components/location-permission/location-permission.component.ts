@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GeolocationService } from '../../services/geolocation.service';
 
@@ -9,14 +9,22 @@ import { GeolocationService } from '../../services/geolocation.service';
   templateUrl: './location-permission.component.html',
   styleUrl: './location-permission.component.css'
 })
-export class LocationPermissionComponent {
+export class LocationPermissionComponent implements OnInit {
   @Output() permissionGranted = new EventEmitter<{latitude: number, longitude: number}>();
   @Output() permissionDenied = new EventEmitter<void>();
+  @Input() autoRequest: boolean = true; // Por defecto solicita automáticamente
   
   loading: boolean = false;
   error: string = '';
 
   constructor(private geolocationService: GeolocationService) {}
+
+  ngOnInit(): void {
+    // Si autoRequest está activado, solicitar ubicación automáticamente
+    if (this.autoRequest) {
+      this.requestLocation();
+    }
+  }
 
   requestLocation(): void {
     this.loading = true;
@@ -37,10 +45,8 @@ export class LocationPermissionComponent {
       error: (err) => {
         this.loading = false;
         this.error = err;
-        // Si el usuario denegó el permiso, emitir el evento
-        if (err.includes('denegado') || err.includes('denied')) {
-          // No emitir automáticamente, dejar que el usuario decida
-        }
+        // Si el usuario denegó el permiso, no hacer nada automáticamente
+        // El usuario puede intentar de nuevo o omitir
       }
     });
   }
