@@ -2,6 +2,7 @@ nelmio_cors:
     defaults:
         origin_regex: true
         allow_origin: 
+            - '^https://demo\.nakedcode\.es$'
             - '%env(string:CORS_ALLOW_ORIGIN)%'
             - '^http://localhost:[0-9]+$'
             - '^http://127\.0\.0\.1:[0-9]+$'
@@ -12,7 +13,9 @@ nelmio_cors:
         allow_credentials: true
     paths:
         '^/api/':
+            origin_regex: true
             allow_origin: 
+                - '^https://demo\.nakedcode\.es$'
                 - '%env(string:CORS_ALLOW_ORIGIN)%'
                 - '^http://localhost:[0-9]+$'
                 - '^http://127\.0\.0\.1:[0-9]+$'
