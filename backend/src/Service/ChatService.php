@@ -61,15 +61,36 @@ class ChatService
             }
 
             // Después de crear el mensaje del sistema, enviar el mensaje de unión del usuario
-            $joinMessage = $this->sendMessage($user, $user->getName() . ' se ha unido al chat');
+            $joinMessage = new ChatMessage();
+            $joinMessage->setUser($user);
+            $joinMessage->setUserName('Sistema');
+            $joinMessage->setMessage($user->getName() . ' se ha unido al chat');
+            
+            try {
+                $this->entityManager->persist($joinMessage);
+                $this->entityManager->flush();
+            } catch (\Exception $e) {
+                throw new \RuntimeException('Error saving join message: ' . $e->getMessage(), 0, $e);
+            }
             
             // Retornar ambos mensajes
             return [$systemMessage, $joinMessage];
         }
         
         // No es el primer usuario, solo enviar mensaje de unión
-        $message = $user->getName() . ' se ha unido al chat';
-        return $this->sendMessage($user, $message);
+        $joinMessage = new ChatMessage();
+        $joinMessage->setUser($user);
+        $joinMessage->setUserName('Sistema');
+        $joinMessage->setMessage($user->getName() . ' se ha unido al chat');
+        
+        try {
+            $this->entityManager->persist($joinMessage);
+            $this->entityManager->flush();
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Error saving join message: ' . $e->getMessage(), 0, $e);
+        }
+        
+        return $joinMessage;
     }
 
     /**
@@ -114,8 +135,19 @@ class ChatService
      */
     public function sendLeaveMessage(User $user): ChatMessage
     {
-        $message = $user->getName() . ' se ha salido del chat';
-        return $this->sendMessage($user, $message);
+        $leaveMessage = new ChatMessage();
+        $leaveMessage->setUser($user);
+        $leaveMessage->setUserName('Sistema');
+        $leaveMessage->setMessage($user->getName() . ' se ha salido del chat');
+        
+        try {
+            $this->entityManager->persist($leaveMessage);
+            $this->entityManager->flush();
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Error saving leave message: ' . $e->getMessage(), 0, $e);
+        }
+        
+        return $leaveMessage;
     }
 
     /**

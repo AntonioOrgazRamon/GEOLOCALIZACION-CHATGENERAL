@@ -23,7 +23,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   loading: boolean = false;
   error: string = '';
   private messagesInterval?: Subscription;
-  private readonly POLL_INTERVAL_MS = 2000; // Actualizar cada 2 segundos
+  private readonly POLL_INTERVAL_MS = 800; // Actualizar cada 800ms para mensajes más rápidos
 
   constructor(
     private chatService: ChatService,
