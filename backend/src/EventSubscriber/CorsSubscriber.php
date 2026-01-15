@@ -27,12 +27,21 @@ class CorsSubscriber implements EventSubscriberInterface
 
         $origin = $request->headers->get('Origin');
         
-        // Allow any localhost origin
+        // Allow localhost origins
         if ($origin && preg_match('#^http://localhost:\d+$#', $origin)) {
             $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Credentials', 'true');
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+            $response->headers->set('Access-Control-Max-Age', '3600');
+        }
+        
+        // Allow production domain
+        if ($origin && preg_match('#^https://demo\.nakedcode\.es$#', $origin)) {
+            $response->headers->set('Access-Control-Allow-Origin', $origin);
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
             $response->headers->set('Access-Control-Max-Age', '3600');
         }
 
