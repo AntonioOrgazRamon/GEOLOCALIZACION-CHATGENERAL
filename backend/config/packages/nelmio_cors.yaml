@@ -1,8 +1,6 @@
 nelmio_cors:
     defaults:
         origin_regex: true
-        # For production, set CORS_ALLOW_ORIGIN in .env
-        # Example: CORS_ALLOW_ORIGIN="^https://chat\.tudominio\.com$"
         allow_origin: 
             - '%env(string:CORS_ALLOW_ORIGIN)%'
             - '^http://localhost:[0-9]+$'
@@ -21,3 +19,4 @@ nelmio_cors:
             allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
             allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
             max_age: 3600
+            allow_credentials: true
