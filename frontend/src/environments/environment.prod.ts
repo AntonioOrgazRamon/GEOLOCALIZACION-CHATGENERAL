@@ -3,6 +3,6 @@
 // The `apiUrl` should be set to your production API URL
 export const environment = {
   production: true,
-  apiUrl: 'https://api.tudominio.com/api' // CAMBIAR ESTO con tu dominio real
+  apiUrl: 'https://demo.nakedcode.es/api' // URL del API en producción
 };
 
