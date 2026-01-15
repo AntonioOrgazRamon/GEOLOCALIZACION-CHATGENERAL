@@ -1,0 +1,47 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Backend (Symfony)
+backend/var/
+backend/vendor/
+backend/.env
+backend/.env.local
+backend/.env.*.local
+backend/config/jwt/*.pem
+backend/config/jwt/*.key
+backend/public/bundles/
+backend/var/cache/
+backend/var/log/
+backend/var/sessions/
+backend/.phpunit.result.cache
+
+# Frontend (Angular)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.sass-cache/
+frontend/coverage/
+frontend/.nyc_output/
+frontend/*.log
+
+# Database
+*.sql
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+

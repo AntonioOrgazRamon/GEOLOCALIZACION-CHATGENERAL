@@ -1,0 +1,33 @@
+<div class="modal-overlay" (click)="skip()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>Permiso de Ubicación</h2>
+    <p>Para usar esta aplicación, necesitamos acceso a tu ubicación. Esto nos permite mostrarte usuarios cercanos.</p>
+    <p class="info-text">💡 <strong>Consejo:</strong> Asegúrate de que tu navegador tenga permisos de ubicación habilitados y que tu GPS o WiFi esté activado.</p>
+    
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+      <div class="error-help" *ngIf="error.includes('denegado') || error.includes('denied')">
+        <p>Para habilitar la ubicación:</p>
+        <ul>
+          <li>Chrome/Edge: Configuración → Privacidad y seguridad → Configuración del sitio → Ubicación</li>
+          <li>Firefox: Configuración → Privacidad y seguridad → Permisos → Ubicación</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button 
+        class="btn btn-primary" 
+        (click)="requestLocation()" 
+        [disabled]="loading">
+        {{ loading ? 'Obteniendo ubicación...' : 'Permitir Ubicación' }}
+      </button>
+      <button 
+        class="btn btn-secondary" 
+        (click)="skip()" 
+        [disabled]="loading">
+        Omitir por ahora
+      </button>
+    </div>
+  </div>
+</div>
