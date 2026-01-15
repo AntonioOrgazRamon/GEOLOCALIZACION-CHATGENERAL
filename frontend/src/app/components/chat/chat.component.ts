@@ -24,6 +24,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   error: string = '';
   private messagesInterval?: Subscription;
   private readonly POLL_INTERVAL_MS = 800; // Actualizar cada 800ms para mensajes más rápidos
+  private pendingMessages: Map<number, ChatMessage> = new Map(); // Mensajes optimistas pendientes de confirmar
 
   constructor(
     private chatService: ChatService,
@@ -91,20 +92,35 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.getMessages().subscribe({
       next: (response) => {
-        // Solo actualizar si hay cambios (comparar por IDs y cantidad)
-        const newMessages = response.messages;
-        const currentIds = this.messages.map(m => m.id).join(',');
-        const newIds = newMessages.map(m => m.id).join(',');
-        const hasChanges = currentIds !== newIds || this.messages.length !== newMessages.length;
+        // Obtener mensajes del servidor
+        const serverMessages = response.messages;
         
-        if (hasChanges) {
+        // Preservar mensajes optimistas pendientes
+        const optimisticMessages = this.messages.filter(m => m.id < 0);
+        
+        // Combinar: mensajes del servidor + mensajes optimistas pendientes
+        const allMessages = [...serverMessages, ...optimisticMessages];
+        
+        // Ordenar por fecha de creación
+        allMessages.sort((a, b) => {
+          const dateA = new Date(a.created_at).getTime();
+          const dateB = new Date(b.created_at).getTime();
+          return dateA - dateB;
+        });
+        
+        // Verificar si hay cambios reales (excluyendo mensajes optimistas)
+        const currentServerIds = this.messages.filter(m => m.id > 0).map(m => m.id).join(',');
+        const newServerIds = serverMessages.map(m => m.id).join(',');
+        const hasChanges = currentServerIds !== newServerIds;
+        
+        if (hasChanges || optimisticMessages.length > 0) {
           // Si el usuario está escribiendo, desactivar detección de cambios temporalmente
           if (wasInputFocused) {
             this.cdr.detach();
           }
           
-          // Actualizar mensajes
-          this.messages = newMessages;
+          // Actualizar mensajes (incluyendo optimistas)
+          this.messages = allMessages;
           this.scrollToBottom();
           
           // Si estaba escribiendo, restaurar detección y estado del input
@@ -180,12 +196,17 @@ export class ChatComponent implements OnInit, OnDestroy {
     const user = this.authService.getUser();
     
     // Crear mensaje optimista (aparece inmediatamente)
+    // Usar ID negativo único para identificar mensajes optimistas
+    const optimisticId = -Date.now();
     const optimisticMessage: ChatMessage = {
-      id: Date.now(), // ID temporal negativo para identificar mensajes optimistas
+      id: optimisticId,
       user_name: user?.name || 'Tú',
       message: messageText,
       created_at: new Date().toISOString()
     };
+    
+    // Guardar el mensaje optimista en el mapa
+    this.pendingMessages.set(optimisticId, optimisticMessage);
     
     // Agregar inmediatamente al chat
     this.messages.push(optimisticMessage);
@@ -196,22 +217,37 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.chatService.sendMessage(messageText).subscribe({
       next: (message) => {
         // Reemplazar el mensaje optimista con el real del servidor
-        const optimisticIndex = this.messages.findIndex(m => m.id === optimisticMessage.id);
+        const optimisticIndex = this.messages.findIndex(m => m.id === optimisticId);
         if (optimisticIndex !== -1) {
           this.messages[optimisticIndex] = message;
         } else {
           // Si no se encuentra el optimista, agregar el real
           this.messages.push(message);
         }
+        
+        // Remover del mapa de pendientes
+        this.pendingMessages.delete(optimisticId);
+        
+        // Ordenar mensajes por fecha
+        this.messages.sort((a, b) => {
+          const dateA = new Date(a.created_at).getTime();
+          const dateB = new Date(b.created_at).getTime();
+          return dateA - dateB;
+        });
+        
         this.scrollToBottom();
       },
       error: (err) => {
         console.error('Error sending message:', err);
         // Remover el mensaje optimista
-        const optimisticIndex = this.messages.findIndex(m => m.id === optimisticMessage.id);
+        const optimisticIndex = this.messages.findIndex(m => m.id === optimisticId);
         if (optimisticIndex !== -1) {
           this.messages.splice(optimisticIndex, 1);
         }
+        
+        // Remover del mapa de pendientes
+        this.pendingMessages.delete(optimisticId);
+        
         this.error = 'Error al enviar mensaje';
         this.newMessage = messageText; // Restaurar el mensaje
       }
