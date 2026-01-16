@@ -10,10 +10,10 @@ export interface Coordinates {
   providedIn: 'root'
 })
 export class GeolocationService {
-  // Ubicación por defecto: Madrid, España (centro geográfico de España)
+  // Ubicación por defecto: Valencia, España
   private readonly DEFAULT_LOCATION: Coordinates = {
-    latitude: 40.4168,
-    longitude: -3.7038
+    latitude: 39.4699,
+    longitude: -0.3763
   };
 
   getCurrentPosition(): Observable<Coordinates> {
