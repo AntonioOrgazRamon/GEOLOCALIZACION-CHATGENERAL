@@ -13,7 +13,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/user', name: 'api_user_')]
-#[IsGranted('ROLE_USER')]
 class UserBanController extends AbstractController
 {
     public function __construct(
@@ -25,8 +24,15 @@ class UserBanController extends AbstractController
     #[Route('/ban-status', name: 'ban_status', methods: ['GET'])]
     public function getBanStatus(): JsonResponse
     {
-        /** @var \App\Entity\User $user */
+        /** @var \App\Entity\User|null $user */
         $user = $this->getUser();
+
+        // Si no hay usuario autenticado, retornar que no está baneado
+        if (!$user) {
+            return $this->json([
+                'is_banned' => false,
+            ]);
+        }
 
         if ($user->isBanned()) {
             return $this->json([

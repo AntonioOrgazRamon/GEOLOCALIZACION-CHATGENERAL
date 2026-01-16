@@ -58,8 +58,21 @@ export class RegisterComponent {
         // Después del registro, hacer login automáticamente
         this.authService.login({ email: this.email, password: this.password }).subscribe({
           next: () => {
-            this.success = 'Registro exitoso! Obteniendo tu ubicación...';
             this.loading = false;
+            
+            // Verificar si el usuario está baneado (aunque es nuevo, por si acaso)
+            const user = this.authService.getUser();
+            if (user && (user.is_banned === true || user.is_banned === 1)) {
+              this.router.navigate(['/banned'], {
+                queryParams: {
+                  reason: user.ban_reason || 'No reason provided',
+                  banned_at: user.banned_at || ''
+                }
+              });
+              return;
+            }
+
+            this.success = 'Registro exitoso! Obteniendo tu ubicación...';
             this.showLocationModal = true; // Esto activará automáticamente la solicitud de ubicación
           },
           error: (err) => {

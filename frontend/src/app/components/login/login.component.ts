@@ -38,28 +38,32 @@ export class LoginComponent {
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: (response) => {
-        // Verificar si el usuario está baneado antes de continuar
+        this.loading = false;
+        
+        // Obtener usuario actualizado después del login
         const user = this.authService.getUser();
-        if (user && user.is_banned) {
+        
+        // Verificar si el usuario está baneado ANTES de hacer cualquier otra cosa
+        if (user && (user.is_banned === true || user.is_banned === 1)) {
           this.router.navigate(['/banned'], {
             queryParams: {
               reason: user.ban_reason || 'No reason provided',
               banned_at: user.banned_at || ''
             }
           });
-          this.loading = false;
           return;
         }
 
         // Verificar si el usuario ya tiene ubicación guardada
         if (user && user.latitude && user.longitude) {
           // Ya tiene ubicación, ir directo al dashboard
-          this.router.navigate(['/dashboard']);
+          setTimeout(() => {
+            this.router.navigate(['/dashboard']);
+          }, 100);
         } else {
           // No tiene ubicación, obtenerla automáticamente
           this.showLocationModal = true;
           this.pendingLogin = true;
-          this.loading = false;
         }
       },
       error: (err) => {

@@ -45,6 +45,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Verificar si el usuario está baneado
+    if (this.user.is_banned) {
+      this.router.navigate(['/banned'], {
+        queryParams: {
+          reason: this.user.ban_reason || 'No reason provided',
+          banned_at: this.user.banned_at || ''
+        }
+      });
+      return;
+    }
+
     this.isAdmin = this.authService.isAdmin();
 
     // Verificar si ya tiene ubicación guardada

@@ -14,7 +14,8 @@ class BanCheckSubscriber implements EventSubscriberInterface
         '/api/login',
         '/api/register',
         '/api/refresh',
-        '/api/user/ban-status',
+        '/api/user/ban-status', // Permitir verificar ban status incluso si está baneado
+        '/api/user/ban-appeal', // Permitir crear ban appeal incluso si está baneado
     ];
 
     public function __construct(
@@ -56,8 +57,8 @@ class BanCheckSubscriber implements EventSubscriberInterface
 
         // Verificar si el usuario está baneado
         if (method_exists($user, 'isBanned') && $user->isBanned()) {
-            // Permitir acceso a rutas de ban appeal
-            if (str_starts_with($path, '/api/user/ban-appeal')) {
+            // Permitir acceso a rutas de ban appeal y ban-status (ya están en publicPaths, pero por si acaso)
+            if (str_starts_with($path, '/api/user/ban-appeal') || str_starts_with($path, '/api/user/ban-status')) {
                 return;
             }
 
