@@ -61,6 +61,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read'])]
     private bool $emailVerified = false;
 
+    #[ORM\Column(type: Types::BOOLEAN, options: ['default' => 0])]
+    #[Groups(['user:read'])]
+    private bool $isAdmin = false;
+
+    #[ORM\Column(type: Types::BOOLEAN, options: ['default' => 0])]
+    #[Groups(['user:read'])]
+    private bool $isBanned = false;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $banReason = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?\DateTimeInterface $bannedAt = null;
+
     #[ORM\Column(type: Types::DATETIME_MUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Groups(['user:read'])]
     private ?\DateTimeInterface $createdAt = null;
@@ -186,7 +202,61 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        $roles = ['ROLE_USER'];
+        if ($this->isAdmin) {
+            $roles[] = 'ROLE_ADMIN';
+        }
+        return $roles;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->isAdmin;
+    }
+
+    public function setIsAdmin(bool $isAdmin): static
+    {
+        $this->isAdmin = $isAdmin;
+        return $this;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->isBanned;
+    }
+
+    public function setIsBanned(bool $isBanned): static
+    {
+        $this->isBanned = $isBanned;
+        if ($isBanned && $this->bannedAt === null) {
+            $this->bannedAt = new \DateTime();
+        } elseif (!$isBanned) {
+            $this->bannedAt = null;
+            $this->banReason = null;
+        }
+        return $this;
+    }
+
+    public function getBanReason(): ?string
+    {
+        return $this->banReason;
+    }
+
+    public function setBanReason(?string $banReason): static
+    {
+        $this->banReason = $banReason;
+        return $this;
+    }
+
+    public function getBannedAt(): ?\DateTimeInterface
+    {
+        return $this->bannedAt;
+    }
+
+    public function setBannedAt(?\DateTimeInterface $bannedAt): static
+    {
+        $this->bannedAt = $bannedAt;
+        return $this;
     }
 
     public function eraseCredentials(): void

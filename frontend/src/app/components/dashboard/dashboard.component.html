@@ -3,6 +3,7 @@
     <h1>Geolocation App</h1>
     <div class="user-info">
       <span>Welcome, {{ user?.name }}</span>
+      <button *ngIf="isAdmin" class="admin-btn" (click)="goToAdmin()">Admin Panel</button>
       <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>

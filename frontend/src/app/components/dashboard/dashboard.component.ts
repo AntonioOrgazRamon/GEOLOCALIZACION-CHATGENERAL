@@ -26,6 +26,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   latitude: number | null = null;
   longitude: number | null = null;
   countdown: number = 10; // Contador regresivo
+  isAdmin: boolean = false;
   private searchInterval?: Subscription;
   private countdownInterval?: Subscription;
   private readonly SEARCH_INTERVAL_MS = 10000; // 10 segundos
@@ -43,6 +44,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
+
+    this.isAdmin = this.authService.isAdmin();
 
     // Verificar si ya tiene ubicación guardada
     if (this.user.latitude && this.user.longitude) {
@@ -220,6 +223,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   resetCountdown(): void {
     // Reiniciar el contador a 10 segundos
     this.countdown = this.SEARCH_INTERVAL_MS / 1000;
+  }
+
+  goToAdmin(): void {
+    this.router.navigate(['/admin']);
   }
 
   logout(): void {

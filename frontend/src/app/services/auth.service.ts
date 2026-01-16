@@ -71,6 +71,11 @@ export class AuthService {
     return !!this.getToken();
   }
 
+  isAdmin(): boolean {
+    const user = this.getUser();
+    return user?.is_admin === true || user?.roles?.includes('ROLE_ADMIN') === true;
+  }
+
   private setTokens(token: string, refreshToken: string): void {
     localStorage.setItem('access_token', token);
     localStorage.setItem('refresh_token', refreshToken);

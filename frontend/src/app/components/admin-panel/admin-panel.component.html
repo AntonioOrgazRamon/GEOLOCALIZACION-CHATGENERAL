@@ -1,0 +1,136 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h1>Admin Panel</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="goToDashboard()">Dashboard</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'users'"
+      (click)="activeTab = 'users'">
+      Users ({{ users.length }})
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'appeals'"
+      (click)="activeTab = 'appeals'">
+      Ban Appeals ({{ banAppeals.length }})
+    </button>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <!-- Users Tab -->
+  <div *ngIf="activeTab === 'users'" class="tab-content">
+    <div class="users-table">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users" [class.banned]="user.is_banned">
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span *ngIf="user.latitude && user.longitude">
+                {{ user.latitude }}, {{ user.longitude }}
+              </span>
+              <span *ngIf="!user.latitude || !user.longitude" class="no-location">No location</span>
+            </td>
+            <td>
+              <span [class]="'status-badge ' + getUserStatusClass(user)">
+                {{ getUserStatus(user) }}
+              </span>
+              <span *ngIf="user.is_admin" class="admin-badge">Admin</span>
+            </td>
+            <td>
+              <button 
+                *ngIf="!user.is_banned" 
+                class="btn btn-danger btn-sm"
+                (click)="openBanModal(user.id)">
+                Ban
+              </button>
+              <button 
+                *ngIf="user.is_banned" 
+                class="btn btn-success btn-sm"
+                (click)="unbanUser(user.id)">
+                Unban
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Ban Appeals Tab -->
+  <div *ngIf="activeTab === 'appeals'" class="tab-content">
+    <div *ngIf="banAppeals.length === 0" class="no-appeals">
+      <p>No pending ban appeals</p>
+    </div>
+    <div *ngIf="banAppeals.length > 0" class="appeals-list">
+      <div *ngFor="let appeal of banAppeals" class="appeal-card">
+        <div class="appeal-header">
+          <div>
+            <strong>{{ appeal.user_name }}</strong> ({{ appeal.user_email }})
+          </div>
+          <div class="appeal-date">{{ appeal.created_at }}</div>
+        </div>
+        <div class="appeal-ban-reason" *ngIf="appeal.ban_reason">
+          <strong>Ban Reason:</strong> {{ appeal.ban_reason }}
+        </div>
+        <div class="appeal-message">
+          <strong>Appeal Message:</strong>
+          <p>{{ appeal.message }}</p>
+        </div>
+        <div class="appeal-actions">
+          <button 
+            class="btn btn-success btn-sm"
+            (click)="approveAppeal(appeal.id)">
+            Approve & Unban
+          </button>
+          <button 
+            class="btn btn-danger btn-sm"
+            (click)="rejectAppeal(appeal.id)">
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ban Modal -->
+  <div *ngIf="showBanModal" class="modal-overlay" (click)="closeBanModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>Ban User</h2>
+      <div class="form-group">
+        <label>Ban Reason:</label>
+        <textarea 
+          [(ngModel)]="banReason" 
+          placeholder="Enter ban reason..."
+          rows="4"
+          class="form-control">
+        </textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" (click)="banUser()" [disabled]="loading">
+          {{ loading ? 'Banning...' : 'Ban User' }}
+        </button>
+        <button class="btn btn-secondary" (click)="closeBanModal()" [disabled]="loading">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

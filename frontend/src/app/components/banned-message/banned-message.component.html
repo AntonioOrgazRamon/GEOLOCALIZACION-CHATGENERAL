@@ -1,0 +1,57 @@
+<div class="banned-container">
+  <div class="banned-card">
+    <div class="banned-icon">🚫</div>
+    <h1>You have been banned</h1>
+    
+    <div class="ban-info">
+      <p class="ban-reason">
+        <strong>Reason:</strong> {{ banReason }}
+      </p>
+      <p class="ban-date" *ngIf="bannedAt">
+        <strong>Banned on:</strong> {{ bannedAt }}
+      </p>
+    </div>
+
+    <div *ngIf="!showAppealForm && !appealSent" class="actions">
+      <button class="btn btn-primary" (click)="showAppeal()">
+        Request Unban
+      </button>
+      <button class="btn btn-secondary" (click)="logout()">
+        Logout
+      </button>
+    </div>
+
+    <div *ngIf="showAppealForm && !appealSent" class="appeal-form">
+      <h3>Request Unban</h3>
+      <p>Please explain why you should be unbanned:</p>
+      <textarea 
+        [(ngModel)]="appealMessage" 
+        placeholder="Enter your appeal message..."
+        rows="5"
+        class="form-control">
+      </textarea>
+      <div *ngIf="error" class="error-message">{{ error }}</div>
+      <div class="form-actions">
+        <button 
+          class="btn btn-primary" 
+          (click)="sendAppeal()" 
+          [disabled]="loading">
+          {{ loading ? 'Sending...' : 'Send Appeal' }}
+        </button>
+        <button 
+          class="btn btn-secondary" 
+          (click)="showAppealForm = false"
+          [disabled]="loading">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="appealSent" class="appeal-sent">
+      <p class="success-message">✅ Your appeal has been sent. An administrator will review it.</p>
+      <button class="btn btn-secondary" (click)="logout()">
+        Logout
+      </button>
+    </div>
+  </div>
+</div>
