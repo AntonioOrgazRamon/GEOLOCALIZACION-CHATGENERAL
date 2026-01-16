@@ -37,9 +37,21 @@ export class LoginComponent {
     this.error = '';
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
-      next: () => {
-        // Verificar si el usuario ya tiene ubicación guardada
+      next: (response) => {
+        // Verificar si el usuario está baneado antes de continuar
         const user = this.authService.getUser();
+        if (user && user.is_banned) {
+          this.router.navigate(['/banned'], {
+            queryParams: {
+              reason: user.ban_reason || 'No reason provided',
+              banned_at: user.banned_at || ''
+            }
+          });
+          this.loading = false;
+          return;
+        }
+
+        // Verificar si el usuario ya tiene ubicación guardada
         if (user && user.latitude && user.longitude) {
           // Ya tiene ubicación, ir directo al dashboard
           this.router.navigate(['/dashboard']);
