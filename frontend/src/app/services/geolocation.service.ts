@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 export interface Coordinates {
   latitude: number;
@@ -10,10 +10,19 @@ export interface Coordinates {
   providedIn: 'root'
 })
 export class GeolocationService {
+  // Ubicación por defecto: Madrid, España (centro geográfico de España)
+  private readonly DEFAULT_LOCATION: Coordinates = {
+    latitude: 40.4168,
+    longitude: -3.7038
+  };
+
   getCurrentPosition(): Observable<Coordinates> {
     return new Observable(observer => {
       if (!navigator.geolocation) {
-        observer.error('Geolocation is not supported by this browser');
+        // Si el navegador no soporta geolocalización, usar ubicación por defecto
+        console.warn('Geolocation not supported, using default location');
+        observer.next(this.DEFAULT_LOCATION);
+        observer.complete();
         return;
       }
 
@@ -26,29 +35,23 @@ export class GeolocationService {
           observer.complete();
         },
         (error) => {
-          let errorMessage = 'Error getting location';
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'Permiso de ubicación denegado. Por favor, permite el acceso a tu ubicación en la configuración del navegador.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'La información de ubicación no está disponible. Verifica tu conexión GPS o WiFi.';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'La solicitud de ubicación tardó demasiado. Intenta de nuevo o verifica tu conexión.';
-              break;
-            default:
-              errorMessage = 'Error al obtener la ubicación. Por favor, intenta de nuevo.';
-          }
-          observer.error(errorMessage);
+          // En lugar de devolver error, usar ubicación por defecto
+          console.warn('Geolocation error, using default location:', error);
+          observer.next(this.DEFAULT_LOCATION);
+          observer.complete();
         },
         {
-          enableHighAccuracy: false, // Cambiar a false para ser más rápido
-          timeout: 30000, // Aumentar timeout a 30 segundos
-          maximumAge: 60000 // Permitir usar ubicación cacheada de hasta 1 minuto
+          enableHighAccuracy: false,
+          timeout: 10000, // Reducido a 10 segundos para ser más rápido
+          maximumAge: 60000
         }
       );
     });
+  }
+
+  // Método para obtener ubicación por defecto directamente
+  getDefaultLocation(): Coordinates {
+    return this.DEFAULT_LOCATION;
   }
 }
 

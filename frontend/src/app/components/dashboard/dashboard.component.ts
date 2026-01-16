@@ -88,12 +88,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.updateLocation(coords.latitude, coords.longitude);
       },
       error: (err) => {
-        this.error = err;
-        this.loadingLocation = false;
-        // Intentar de nuevo después de 5 segundos
-        setTimeout(() => {
-          this.getMyLocationAutomatically();
-        }, 5000);
+        // Si falla, usar ubicación por defecto
+        console.warn('Using default location due to error:', err);
+        const defaultCoords = this.geolocationService.getDefaultLocation();
+        this.latitude = defaultCoords.latitude;
+        this.longitude = defaultCoords.longitude;
+        this.updateLocation(defaultCoords.latitude, defaultCoords.longitude);
       }
     });
   }

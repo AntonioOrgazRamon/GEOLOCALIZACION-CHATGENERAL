@@ -30,28 +30,24 @@ export class LocationPermissionComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    // Verificar si el navegador soporta geolocalización
-    if (!navigator.geolocation) {
-      this.loading = false;
-      this.error = 'Tu navegador no soporta geolocalización. Por favor, usa un navegador más reciente.';
-      return;
-    }
-
+    // Intentar obtener ubicación real, pero si falla, usar ubicación por defecto
     this.geolocationService.getCurrentPosition().subscribe({
       next: (coords) => {
         this.loading = false;
         this.permissionGranted.emit(coords);
       },
       error: (err) => {
+        // Esto no debería pasar ahora, pero por si acaso, usar ubicación por defecto
         this.loading = false;
-        this.error = err;
-        // Si el usuario denegó el permiso, no hacer nada automáticamente
-        // El usuario puede intentar de nuevo o omitir
+        const defaultCoords = this.geolocationService.getDefaultLocation();
+        this.permissionGranted.emit(defaultCoords);
       }
     });
   }
 
   skip(): void {
-    this.permissionDenied.emit();
+    // En lugar de denegar, usar ubicación por defecto
+    const defaultCoords = this.geolocationService.getDefaultLocation();
+    this.permissionGranted.emit(defaultCoords);
   }
 }
