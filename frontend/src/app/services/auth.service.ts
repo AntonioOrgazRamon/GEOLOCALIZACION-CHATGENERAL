@@ -21,6 +21,9 @@ export class AuthService {
       tap(response => {
         if (response.token && response.refresh_token) {
           this.setTokens(response.token, response.refresh_token);
+          // Guardar timestamp de login para filtrar mensajes
+          const loginTimestamp = new Date().toISOString();
+          localStorage.setItem('login_timestamp', loginTimestamp);
           // Debug: verificar respuesta del servidor
           console.log('Login response user:', response.user);
           this.setUser(response.user);
@@ -93,6 +96,7 @@ export class AuthService {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('login_timestamp');
   }
 }
 

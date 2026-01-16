@@ -70,21 +70,13 @@ class ChatController extends AbstractController
                 return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
             }
 
-            // Verificar si el usuario ya tiene un mensaje de "se ha unido"
-            $existingJoinMessage = $this->chatService->getUserJoinMessage($user);
+            // IMPORTANTE: Siempre crear un nuevo mensaje de "se ha unido"
+            // Esto asegura que cuando un usuario se deslogea y vuelve a iniciar sesión,
+            // solo vea mensajes desde este nuevo login, no mensajes anteriores
+            // El método sendJoinMessage eliminará automáticamente los mensajes de "se ha unido" anteriores
             
-            if ($existingJoinMessage) {
-                // El usuario ya se unió antes, devolver ese mensaje
-                return $this->json([
-                    'id' => $existingJoinMessage->getId(),
-                    'user_name' => $existingJoinMessage->getUserName(),
-                    'message' => $existingJoinMessage->getMessage(),
-                    'created_at' => $existingJoinMessage->getCreatedAt()->format('Y-m-d H:i:s'),
-                    'already_joined' => true
-                ]);
-            }
-
             // Crear nuevo mensaje de "se ha unido" (esto también creará el mensaje de creación si es el primer usuario)
+            // y eliminará los mensajes de "se ha unido" anteriores del usuario
             $joinMessages = $this->chatService->sendJoinMessage($user);
 
             // Si es el primer usuario, sendJoinMessage devuelve un array con dos mensajes

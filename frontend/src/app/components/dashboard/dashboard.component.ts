@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { GeolocationService } from '../../services/geolocation.service';
+import { AdminService } from '../../services/admin.service';
 import { NearbyUser } from '../../models/user.model';
 import { ChatComponent } from '../chat/chat.component';
 import { interval, Subscription } from 'rxjs';
@@ -29,12 +30,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isAdmin: boolean = false;
   private searchInterval?: Subscription;
   private countdownInterval?: Subscription;
+  private banCheckInterval?: Subscription;
   private readonly SEARCH_INTERVAL_MS = 10000; // 10 segundos
+  private readonly BAN_CHECK_INTERVAL_MS = 2000; // 2 segundos para verificar baneo
 
   constructor(
     private authService: AuthService,
     private apiService: ApiService,
     private geolocationService: GeolocationService,
+    private adminService: AdminService,
     private router: Router
   ) {}
 
@@ -84,6 +88,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // Si no tiene ubicación, obtenerla automáticamente
       this.getMyLocationAutomatically();
     }
+
+    // Iniciar verificación periódica de baneo
+    this.startBanCheck();
   }
 
   ngOnDestroy(): void {
@@ -93,6 +100,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     if (this.countdownInterval) {
       this.countdownInterval.unsubscribe();
+    }
+    if (this.banCheckInterval) {
+      this.banCheckInterval.unsubscribe();
     }
   }
 
@@ -243,6 +253,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   goToAdmin(): void {
     this.router.navigate(['/admin']);
+  }
+
+  startBanCheck(): void {
+    // Verificar estado de baneo cada 2 segundos
+    this.banCheckInterval = interval(this.BAN_CHECK_INTERVAL_MS).subscribe(() => {
+      this.checkBanStatus();
+    });
+  }
+
+  checkBanStatus(): void {
+    this.adminService.getBanStatus().subscribe({
+      next: (response: any) => {
+        if (response.is_banned) {
+          // Usuario ha sido baneado, redirigir inmediatamente
+          this.router.navigate(['/banned'], {
+            queryParams: {
+              reason: response.ban_reason || 'No reason provided',
+              banned_at: response.banned_at || ''
+            }
+          });
+          // Limpiar intervalos antes de redirigir
+          if (this.banCheckInterval) {
+            this.banCheckInterval.unsubscribe();
+          }
+        }
+      },
+      error: (err) => {
+        // Ignorar errores silenciosamente para no interrumpir la experiencia
+        console.error('Error checking ban status:', err);
+      }
+    });
   }
 
   logout(): void {

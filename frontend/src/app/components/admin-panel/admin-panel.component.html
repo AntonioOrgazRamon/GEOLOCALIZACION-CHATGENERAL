@@ -2,6 +2,13 @@
   <div class="admin-header">
     <h1>Admin Panel</h1>
     <div class="header-actions">
+      <button 
+        class="btn btn-refresh" 
+        (click)="manualRefresh()" 
+        [disabled]="refreshing"
+        title="Actualizar">
+        🔄 Actualizar
+      </button>
       <button class="btn btn-secondary" (click)="goToDashboard()">Dashboard</button>
     </div>
   </div>
@@ -25,6 +32,16 @@
 
   <!-- Users Tab -->
   <div *ngIf="activeTab === 'users'" class="tab-content">
+    <div class="users-header">
+      <h3 class="users-title">Usuarios ({{ users.length }})</h3>
+      <button 
+        class="btn btn-refresh" 
+        (click)="manualRefresh()" 
+        [disabled]="refreshing"
+        title="Actualizar">
+        🔄 Actualizar
+      </button>
+    </div>
     <div class="users-table">
       <table>
         <thead>
@@ -76,6 +93,16 @@
 
   <!-- Ban Appeals Tab -->
   <div *ngIf="activeTab === 'appeals'" class="tab-content">
+    <div class="appeals-header">
+      <h3 class="appeals-title">Ban Appeals ({{ banAppeals.length }})</h3>
+      <button 
+        class="btn btn-refresh" 
+        (click)="manualRefresh()" 
+        [disabled]="refreshing"
+        title="Actualizar">
+        🔄 Actualizar
+      </button>
+    </div>
     <div *ngIf="banAppeals.length === 0" class="no-appeals">
       <p>No pending ban appeals</p>
     </div>
@@ -114,12 +141,13 @@
   <div *ngIf="showBanModal" class="modal-overlay" (click)="closeBanModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <h2>Ban User</h2>
+      <div *ngIf="error" class="error-message">{{ error }}</div>
       <div class="form-group">
         <label>Ban Reason:</label>
         <textarea 
           [(ngModel)]="banReason" 
           placeholder="Enter ban reason..."
-          rows="4"
+          rows="5"
           class="form-control">
         </textarea>
       </div>

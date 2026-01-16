@@ -51,7 +51,8 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   showBanModal: boolean = false;
 
   private refreshInterval?: Subscription;
-  private readonly REFRESH_INTERVAL_MS = 3000; // 3 segundos para tiempo real
+  private readonly REFRESH_INTERVAL_MS = 1500; // 1.5 segundos para tiempo real más rápido
+  refreshing: boolean = false;
 
   constructor(
     private adminService: AdminService,
@@ -70,35 +71,59 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadData(): void {
-    this.loading = true;
+  loadData(showLoading: boolean = false): void {
+    if (showLoading) {
+      this.loading = true;
+    }
+    this.refreshing = true;
     this.error = '';
+
+    let usersLoaded = false;
+    let appealsLoaded = false;
+
+    const checkComplete = () => {
+      if (usersLoaded && appealsLoaded) {
+        this.loading = false;
+        this.refreshing = false;
+      }
+    };
 
     // Cargar usuarios y peticiones en paralelo
     this.adminService.getAllUsers().subscribe({
       next: (response) => {
         this.users = response.users || [];
-        this.loading = false;
+        usersLoaded = true;
+        checkComplete();
       },
       error: (err) => {
         this.error = err.error?.error || 'Error loading users';
-        this.loading = false;
+        usersLoaded = true;
+        checkComplete();
       }
     });
 
     this.adminService.getBanAppeals().subscribe({
       next: (response) => {
         this.banAppeals = response.appeals || [];
+        appealsLoaded = true;
+        checkComplete();
       },
       error: (err) => {
         console.error('Error loading ban appeals:', err);
+        appealsLoaded = true;
+        checkComplete();
       }
     });
   }
 
+  manualRefresh(): void {
+    this.loadData(true);
+  }
+
   startAutoRefresh(): void {
     this.refreshInterval = interval(this.REFRESH_INTERVAL_MS).subscribe(() => {
-      this.loadData();
+      // Refrescar siempre, incluso si está cargando (para tiempo real)
+      this.loadData(false);
     });
   }
 
@@ -124,7 +149,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.adminService.banUser(this.banUserId, this.banReason).subscribe({
       next: () => {
         this.closeBanModal();
-        this.loadData(); // Recargar datos
+        // Actualizar inmediatamente sin esperar
+        setTimeout(() => {
+          this.loadData(true);
+        }, 100);
       },
       error: (err) => {
         this.error = err.error?.error || 'Error banning user';
@@ -141,7 +169,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.adminService.unbanUser(userId).subscribe({
       next: () => {
-        this.loadData(); // Recargar datos
+        // Actualizar inmediatamente sin esperar
+        setTimeout(() => {
+          this.loadData(true);
+        }, 100);
       },
       error: (err) => {
         this.error = err.error?.error || 'Error unbanning user';
@@ -158,7 +189,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.adminService.approveBanAppeal(appealId).subscribe({
       next: () => {
-        this.loadData(); // Recargar datos
+        // Actualizar inmediatamente sin esperar
+        setTimeout(() => {
+          this.loadData(true);
+        }, 100);
       },
       error: (err) => {
         this.error = err.error?.error || 'Error approving appeal';
@@ -175,7 +209,10 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.adminService.rejectBanAppeal(appealId).subscribe({
       next: () => {
-        this.loadData(); // Recargar datos
+        // Actualizar inmediatamente sin esperar
+        setTimeout(() => {
+          this.loadData(true);
+        }, 100);
       },
       error: (err) => {
         this.error = err.error?.error || 'Error rejecting appeal';

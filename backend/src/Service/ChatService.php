@@ -78,6 +78,10 @@ class ChatService
         }
         
         // No es el primer usuario, solo enviar mensaje de unión
+        // IMPORTANTE: Eliminar mensajes de "se ha unido" anteriores del usuario
+        // para que solo se muestren mensajes desde este nuevo login
+        $this->deletePreviousJoinMessages($user);
+        
         $joinMessage = new ChatMessage();
         $joinMessage->setUser($user);
         $joinMessage->setUserName('Sistema');
@@ -157,6 +161,29 @@ class ChatService
     public function cleanMessagesIfNoActiveUsers(): void
     {
         $this->checkAndCleanMessages();
+    }
+
+    /**
+     * Eliminar mensajes de "se ha unido" anteriores de un usuario
+     * Esto asegura que solo se muestren mensajes desde el login más reciente
+     */
+    private function deletePreviousJoinMessages(User $user): void
+    {
+        $previousJoinMessages = $this->chatMessageRepository->createQueryBuilder('cm')
+            ->where('cm.user = :userId')
+            ->andWhere('cm.message LIKE :pattern')
+            ->setParameter('userId', $user->getId())
+            ->setParameter('pattern', '%se ha unido al chat%')
+            ->getQuery()
+            ->getResult();
+
+        foreach ($previousJoinMessages as $message) {
+            $this->entityManager->remove($message);
+        }
+        
+        if (count($previousJoinMessages) > 0) {
+            $this->entityManager->flush();
+        }
     }
 }
 

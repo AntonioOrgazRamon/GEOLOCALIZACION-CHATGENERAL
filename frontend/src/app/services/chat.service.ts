@@ -21,6 +21,9 @@ export class ChatService {
   }
 
   joinChat(): Observable<ChatMessage> {
+    // Guardar timestamp cuando se une al chat
+    const joinTimestamp = new Date().toISOString();
+    localStorage.setItem('chat_join_timestamp', joinTimestamp);
     // Enviar mensaje de "se ha unido al chat"
     return this.http.post<ChatMessage>(`${this.apiUrl}/join`, {});
   }
