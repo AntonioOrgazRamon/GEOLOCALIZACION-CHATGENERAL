@@ -21,7 +21,11 @@ export class AuthService {
       tap(response => {
         if (response.token && response.refresh_token) {
           this.setTokens(response.token, response.refresh_token);
+          // Debug: verificar respuesta del servidor
+          console.log('Login response user:', response.user);
           this.setUser(response.user);
+          // Debug: verificar usuario guardado
+          console.log('User saved to localStorage:', this.getUser());
         }
       })
     );

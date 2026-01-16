@@ -57,6 +57,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.isAdmin = this.authService.isAdmin();
+    
+    // Debug: verificar admin status
+    console.log('Dashboard - User:', this.user);
+    console.log('Dashboard - Is admin?', this.isAdmin);
+    console.log('Dashboard - is_admin value:', this.user?.is_admin);
 
     // Verificar si ya tiene ubicación guardada
     if (this.user.latitude && this.user.longitude) {

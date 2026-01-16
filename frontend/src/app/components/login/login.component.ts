@@ -43,6 +43,10 @@ export class LoginComponent {
         // Obtener usuario actualizado después del login
         const user = this.authService.getUser();
         
+        // Debug: verificar qué tiene el usuario
+        console.log('User after login:', user);
+        console.log('Is admin?', this.authService.isAdmin());
+        
         // Verificar si el usuario está baneado ANTES de hacer cualquier otra cosa
         if (user && (user.is_banned === true || user.is_banned === 1)) {
           this.router.navigate(['/banned'], {
