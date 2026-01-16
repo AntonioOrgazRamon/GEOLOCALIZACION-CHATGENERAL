@@ -48,6 +48,8 @@ class AuthController extends AbstractController
                     'id' => $user->getId(),
                     'name' => $user->getName(),
                     'email' => $user->getEmail(),
+                    'is_admin' => $user->isAdmin(),
+                    'is_banned' => $user->isBanned(),
                 ],
             ], Response::HTTP_CREATED);
         } catch (\RuntimeException $e) {
@@ -77,6 +79,8 @@ class AuthController extends AbstractController
                     'id' => $result['user']->getId(),
                     'name' => $result['user']->getName(),
                     'email' => $result['user']->getEmail(),
+                    'is_admin' => $result['user']->isAdmin(),
+                    'is_banned' => $result['user']->isBanned(),
                 ],
             ]);
         } catch (\Symfony\Component\Security\Core\Exception\AuthenticationException $e) {
@@ -145,6 +149,8 @@ class AuthController extends AbstractController
                     'id' => $result['user']->getId(),
                     'name' => $result['user']->getName(),
                     'email' => $result['user']->getEmail(),
+                    'is_admin' => $result['user']->isAdmin(),
+                    'is_banned' => $result['user']->isBanned(),
                 ],
             ]);
         } catch (\Symfony\Component\Security\Core\Exception\AuthenticationException $e) {
